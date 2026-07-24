@@ -138,12 +138,13 @@ namespace ILRuntime.Runtime.Intepreter
                         //CloneStackValueType(a, a, mStack);
                         break;
                     case ObjectTypes.Object:
-                    case ObjectTypes.FieldReference:
-                    case ObjectTypes.ArrayReference:
                         {
                             if (i > 0 || !method.HasThis)//this instance should not be cloned
                                 mStack[a->Value] = CheckAndCloneValueType(mStack[a->Value], AppDomain);
                         }
+                        break;
+                    case ObjectTypes.FieldReference:
+                    case ObjectTypes.ArrayReference:
                         break;
                 }
             }

@@ -1,9 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using ILRuntimeTest.TestFramework;
 
 namespace TestCases
 {
@@ -259,6 +262,82 @@ namespace TestCases
                 await Task.Delay(1);
             }
             // it will stuck at some point, and becomes a infinite loop
+        }
+
+        public static void TestIssueAsyncStateMachineStructLocalAfterAwait()
+        {
+            Issue.ResetReadIds();
+
+            Issue.Run();
+        }
+
+        class Issue
+        {
+            int idValue;
+            static int readIdCount;
+            static int firstReadId;
+            static int secondReadId;
+
+            public int id
+            {
+                get
+                {
+                    int value = idValue;
+                    int index = ++readIdCount;
+                    if (index == 1)
+                    {
+                        firstReadId = value;
+                    }
+                    else if (index == 2)
+                    {
+                        secondReadId = value;
+                    }
+                    return value;
+                }
+                private set
+                {
+                    idValue = value;
+                }
+            }
+
+            public static int ReadIdCount => readIdCount;
+
+            public static int FirstReadId => firstReadId;
+
+            public static int SecondReadId => secondReadId;
+
+            public static void ResetReadIds()
+            {
+                readIdCount = 0;
+                firstReadId = 0;
+                secondReadId = 0;
+            }
+
+            public static bool Create(out Issue issue)
+            {
+                issue = new Issue();
+                issue.id = new Random(12345).Next();
+                return true;
+            }
+
+            internal static Task CreateAsync()
+            {
+                return Task.Delay(100);
+            }
+
+            public static async void Run()
+            {
+                if (!Create(out var issue))
+                {
+                    return;
+                }
+
+                Console.WriteLine(issue.id);
+
+                await CreateAsync();
+
+                Console.WriteLine(issue.id);
+            }
         }
     }
 }
